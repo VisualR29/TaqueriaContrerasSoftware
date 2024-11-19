@@ -1,6 +1,6 @@
 import { addKeyword, EVENTS } from "@builderbot/bot";
 import { generateTimer } from "../utils/generateTimer";
-import { getHistoryParse, handleHistory } from "../utils/handleHistory";
+import { getHistory, getHistoryParse, handleHistory } from "../utils/handleHistory";
 import AIClass from "../services/ai";
 import { getFullCurrentDate } from "src/utils/currentDate";
 import { pdfQuery } from "src/services/pdf";
@@ -27,11 +27,13 @@ Para proporcionar respuestas más útiles, puedes utilizar la información propo
 ### INTRUCCIONES
 - Mantén un tono profesional y siempre responde en primera persona.
 - NO ofrescas promociones que no existe en la BASE DE DATOS
+- Finaliza la conversacion con CTA ¿Te gustaria agendar un cita? ¿Quieres reservas una cita?
+- Continua la conversacion sin saludar en primera persona
 
 Respuesta útil adecuadas para enviar por WhatsApp (en español):`
 
 
-export const generatePromptSeller = (history: string, database:string) => {
+export const generatePromptSeller = (history: string, database: string) => {
     const nowDate = getFullCurrentDate()
     return PROMPT_SELLER
         .replace('{HISTORY}', history)
@@ -41,14 +43,15 @@ export const generatePromptSeller = (history: string, database:string) => {
 
 const flowSeller = addKeyword(EVENTS.ACTION)
     .addAnswer(`⏱️`)
-    .addAction(async (ctx, { state, flowDynamic, extensions }) => {
+    .addAction(async (_, { state, flowDynamic, extensions }) => {
         try {
 
             const ai = extensions.ai as AIClass
+            const lastMessage = getHistory(state).at(-1)
             const history = getHistoryParse(state)
 
-            const dataBase = await pdfQuery(ctx.body)
-            console.log({dataBase})
+            const dataBase = await pdfQuery(lastMessage.content)
+            console.log({ dataBase })
             const promptInfo = generatePromptSeller(history, dataBase)
 
             const response = await ai.createChat([
@@ -59,7 +62,9 @@ const flowSeller = addKeyword(EVENTS.ACTION)
             ])
 
             await handleHistory({ content: response, role: 'assistant' }, state)
+
             const chunks = response.split(/(?<!\d)\.\s+/g);
+
             for (const chunk of chunks) {
                 await flowDynamic([{ body: chunk.trim(), delay: generateTimer(150, 250) }]);
             }

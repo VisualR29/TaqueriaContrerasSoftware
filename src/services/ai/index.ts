@@ -25,13 +25,13 @@ class AIClass {
         if (!fs.existsSync(path)) {
             throw new Error("No se encuentra el archivo");
         }
-    
+
         try {
             const transcription = await this.openai.audio.transcriptions.create({
                 file: fs.createReadStream(path),
                 model: "whisper-1"
             })
-    
+
             return transcription.text;
         } catch (err) {
             console.log(err.response.data)
@@ -84,7 +84,7 @@ class AIClass {
     ): Promise<{ prediction: string }> => {
         try {
             const completion = await this.openai.chat.completions.create({
-                model,
+                model: model ?? this.model,
                 temperature: temperature,
                 messages,
                 functions: [
@@ -115,9 +115,7 @@ class AIClass {
                     name: "fn_get_prediction_intent",
                 }
             });
-            // Convert json to object
             const response = JSON.parse(completion.choices[0].message.function_call.arguments);
-
             return response;
         } catch (err) {
             console.error(err);

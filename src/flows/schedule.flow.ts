@@ -31,15 +31,16 @@ const generatePromptFilter = (history: string) => {
     return mainPrompt;
 }
 
-const flowSchedule = addKeyword(EVENTS.ACTION).addAction(async (ctx, { extensions, state, flowDynamic, endFlow }) => {
+const flowSchedule = addKeyword(EVENTS.ACTION).addAction(async (_, { extensions, state, flowDynamic, endFlow }) => {
     await flowDynamic('Dame un momento para consultar la agenda...');
     const ai = extensions.ai as AIClass;
     const history = getHistoryParse(state);
     const list = await getCurrentCalendar()
 
     const listParse = list
-        .map((d) => parse(d, 'yyyy/MM/dd HH:mm:ss', new Date()))
-        .map((fromDate) => ({ fromDate, toDate: addMinutes(fromDate, +DURATION_MEET) }));
+        .map(({ start, end }) => ({ fromDate: new Date(start), toDate: new Date(end) }));
+
+    console.log({ listParse })
 
     const promptFilter = generatePromptFilter(history);
 
@@ -54,7 +55,7 @@ const flowSchedule = addKeyword(EVENTS.ACTION).addAction(async (ctx, { extension
 
     const isDateAvailable = listParse.every(({ fromDate, toDate }) => !isWithinInterval(desiredDate, { start: fromDate, end: toDate }));
 
-    if(!isDateAvailable){
+    if (!isDateAvailable) {
         const m = 'Lo siento, esa hora ya está reservada. ¿Alguna otra fecha y hora?';
         await flowDynamic(m);
         await handleHistory({ content: m, role: 'assistant' }, state);
@@ -71,12 +72,12 @@ const flowSchedule = addKeyword(EVENTS.ACTION).addAction(async (ctx, { extension
     for (const chunk of chunks) {
         await flowDynamic([{ body: chunk.trim(), delay: generateTimer(150, 250) }]);
     }
-}).addAction({capture:true}, async ({body},{gotoFlow, flowDynamic, state}) => {
+}).addAction({ capture: true }, async ({ body }, { gotoFlow, flowDynamic, state }) => {
 
-    if(body.toLowerCase().includes('si')) return gotoFlow(flowConfirm)
-    
+    if (body.toLowerCase().includes('si')) return gotoFlow(flowConfirm)
+
     await flowDynamic('¿Alguna otra fecha y hora?')
-    await state.update({desiredDate:null})
+    await state.update({ desiredDate: null })
 })
 
 export { flowSchedule }

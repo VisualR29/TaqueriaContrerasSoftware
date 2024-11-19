@@ -9,27 +9,27 @@ const PROMPT_DISCRIMINATOR = `### Historial de Conversación (Vendedor/Cliente) 
 
 ### Intenciones del Usuario ###
 
-**HABLAR**: Selecciona esta acción si el cliente parece querer hacer una pregunta o necesita más información.
-**PROGRAMAR**: Selecciona esta acción si el cliente muestra intención de programar una cita.
+**HABLAR**: Selecciona esta acción si el cliente parece necesitar más información sobre el negocio, servicio o informarse del horario de atencion.
+**PROGRAMAR**: Selecciona esta acción unicamente cuando el cliente determine la hora y fecha para programar una cita.
 
 ### Instrucciones ###
 
-Por favor, clasifica la siguiente conversación según la intención del usuario.`
+Por favor, analiza la siguiente conversación y determina la intención del usuario.`
 
 export default async (_: BotContext, { state, gotoFlow, extensions }: BotMethods) => {
     const ai = extensions.ai as AIClass
     const history = getHistoryParse(state)
-    const prompt = PROMPT_DISCRIMINATOR
+    const prompt = PROMPT_DISCRIMINATOR.replace('{HISTORY}', history)
 
 
-    console.log(prompt.replace('{HISTORY}', history))
+    console.log(prompt)
 
     const { prediction } = await ai.determineChatFn([
         {
             role: 'system',
-            content: prompt.replace('{HISTORY}', history)
+            content: prompt
         }
-    ], 'gpt-3.5-turbo')
+    ])
 
 
     console.log({ prediction })
