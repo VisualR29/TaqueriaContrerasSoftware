@@ -26,7 +26,7 @@ Este proyecto es un chatbot impulsado por IA diseñado para la programación de 
 1. Clona el repositorio:
 
    ```bash
-   git clone https://github.com/leifermendez/bot-google-n8n-calendar
+   git clone https://github.com/VisualR29/TaqueriaContrerasSoftware.git
    cd builderbot-chatbot
    ```
 
