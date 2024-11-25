@@ -27,7 +27,6 @@ Este proyecto es un chatbot impulsado por IA diseñado para la programación de 
 
    ```bash
    git clone https://github.com/VisualR29/TaqueriaContrerasSoftware.git
-   cd builderbot-chatbot
    ```
 
 2. Intala las dependencias:
